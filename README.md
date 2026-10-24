@@ -60,6 +60,10 @@ SUPABASE_SERVICE_ROLE_KEY=sua-chave-service-role
 MASTER_SLUG=uma-sequencia-longa-aleatoria-e-dificil-de-adivinhar
 ```
 
+Se a integração da Vercel fornecer `SUPABASE_SECRET_KEY` no lugar de
+`SUPABASE_SERVICE_ROLE_KEY`, não é necessário duplicar a chave: a API aceita
+qualquer um dos dois nomes.
+
 O slug deve conter somente o trecho depois da primeira barra. Não use `admin`, `senha` ou outro nome previsível.
 
 ## 4. Rodar localmente
@@ -111,7 +115,7 @@ O teste automatizado confirma, entre outras validações, que registros ocultos 
 3. Confirme o framework **Vite**.
 4. Configure as três variáveis em **Settings → Environment Variables**:
    - `SUPABASE_URL`
-   - `SUPABASE_SERVICE_ROLE_KEY`
+   - `SUPABASE_SERVICE_ROLE_KEY` **ou** `SUPABASE_SECRET_KEY`
    - `MASTER_SLUG`
 5. Faça o deploy.
 

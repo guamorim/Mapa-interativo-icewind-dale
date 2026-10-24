@@ -12,9 +12,18 @@ const PUBLIC_COLUMNS =
   'id,name,color,category,x,y,description,image_url,is_visible,mission_status,created_at,updated_at'
 
 function supabase() {
-  const url = process.env.SUPABASE_URL
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  const url = (process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL)?.trim()
+  const serviceRoleKey = (
+    process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY
+  )?.trim()
   if (!url || !serviceRoleKey) return null
+
+  try {
+    new URL(url)
+  } catch {
+    throw new Error('SUPABASE_URL_INVALIDA')
+  }
+
   return createClient(url, serviceRoleKey, {
     auth: { persistSession: false, autoRefreshToken: false },
   })
@@ -24,32 +33,43 @@ function firstQueryValue(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] : value
 }
 
+function queryValue(request: ApiRequest, name: string) {
+  const directValue = firstQueryValue(request.query?.[name])
+  if (directValue !== undefined) return directValue
+
+  try {
+    return new URL(request.url ?? '/', 'https://local.invalid').searchParams.get(name) ?? undefined
+  } catch {
+    return undefined
+  }
+}
+
 function masterSlugHeader(request: ApiRequest) {
   return request.headers['x-master-slug']
 }
 
 export default async function handler(request: ApiRequest, response: ApiResponse) {
-  response.setHeader('Cache-Control', 'no-store')
-  response.setHeader('Content-Type', 'application/json; charset=utf-8')
-
-  if (request.method === 'OPTIONS') return response.status(204).end()
-
-  const database = supabase()
-  if (!database) {
-    return response.status(503).json({
-      error: 'O banco de dados ainda não foi configurado no servidor.',
-    })
-  }
-
-  const wantsMasterData =
-    request.method !== 'GET' || firstQueryValue(request.query.scope) === 'all'
-  const isMaster = hasValidMasterSlug(masterSlugHeader(request))
-
-  if (wantsMasterData && !isMaster) {
-    return response.status(404).json({ error: 'Recurso não encontrado.' })
-  }
-
   try {
+    response.setHeader('Cache-Control', 'no-store')
+    response.setHeader('Content-Type', 'application/json; charset=utf-8')
+
+    if (request.method === 'OPTIONS') return response.status(204).end()
+
+    const database = supabase()
+    if (!database) {
+      return response.status(503).json({
+        error:
+          'Configure SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY (ou SUPABASE_SECRET_KEY) na Vercel.',
+      })
+    }
+
+    const wantsMasterData = request.method !== 'GET' || queryValue(request, 'scope') === 'all'
+    const isMaster = hasValidMasterSlug(masterSlugHeader(request))
+
+    if (wantsMasterData && !isMaster) {
+      return response.status(404).json({ error: 'Recurso não encontrado.' })
+    }
+
     if (request.method === 'GET') {
       if (wantsMasterData) {
         const { data, error } = await database
@@ -84,7 +104,7 @@ export default async function handler(request: ApiRequest, response: ApiResponse
     }
 
     if (request.method === 'PUT') {
-      const id = firstQueryValue(request.query.id)
+      const id = queryValue(request, 'id')
       if (!validMarkerId(id)) return response.status(400).json({ error: 'ID de ponto inválido.' })
 
       const marker = parseMarkerInput(request.body)
@@ -99,7 +119,7 @@ export default async function handler(request: ApiRequest, response: ApiResponse
     }
 
     if (request.method === 'DELETE') {
-      const id = firstQueryValue(request.query.id)
+      const id = queryValue(request, 'id')
       if (!validMarkerId(id)) return response.status(400).json({ error: 'ID de ponto inválido.' })
 
       const { error } = await database.from('markers').delete().eq('id', id)
@@ -114,9 +134,12 @@ export default async function handler(request: ApiRequest, response: ApiResponse
       return response.status(400).json({ error: error.message })
     }
 
-    console.error('Falha na API de marcadores:', error)
+    console.error('Falha na API de marcadores:', error instanceof Error ? error.message : error)
     return response.status(500).json({
-      error: 'Não foi possível acessar os dados do mapa.',
+      error:
+        error instanceof Error && error.message === 'SUPABASE_URL_INVALIDA'
+          ? 'A variável SUPABASE_URL da Vercel não contém uma URL válida.'
+          : 'Não foi possível acessar os dados do mapa.',
     })
   }
 }

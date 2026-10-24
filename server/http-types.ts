@@ -2,8 +2,9 @@ import type { IncomingHttpHeaders, ServerResponse } from 'node:http'
 
 export interface ApiRequest {
   method?: string
+  url?: string
   headers: IncomingHttpHeaders
-  query: Record<string, string | string[] | undefined>
+  query?: Record<string, string | string[] | undefined>
   body?: unknown
 }
 
