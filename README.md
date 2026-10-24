@@ -40,9 +40,9 @@ npm install
 3. Copie e execute todo o arquivo `supabase/migration.sql`.
 4. Em **Project Settings → API**, copie:
    - a URL do projeto;
-   - a chave `service_role`.
+   - a chave privada `service_role` ou `secret`.
 
-A chave `service_role` é privada. Não a coloque em arquivos versionados e nunca use uma variável iniciada por `VITE_` para armazená-la.
+A chave privada é secreta. Não a coloque em arquivos versionados e nunca use uma variável iniciada por `VITE_` para armazená-la.
 
 ## 3. Configurar o ambiente local
 
@@ -55,14 +55,14 @@ Copy-Item .env.example .env.local
 Preencha:
 
 ```dotenv
-SUPABASE_URL=https://seu-projeto.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=sua-chave-service-role
+ICEWIND_DB_URL=https://seu-projeto.supabase.co
+ICEWIND_DB_SECRET_KEY=sua-chave-privada-do-supabase
 MASTER_SLUG=uma-sequencia-longa-aleatoria-e-dificil-de-adivinhar
 ```
 
-Se a integração da Vercel fornecer `SUPABASE_SECRET_KEY` no lugar de
-`SUPABASE_SERVICE_ROLE_KEY`, não é necessário duplicar a chave: a API aceita
-qualquer um dos dois nomes.
+Os nomes `ICEWIND_DB_URL` e `ICEWIND_DB_SECRET_KEY` são próprios desta aplicação.
+A API não lê `SUPABASE_URL`, `SUPABASE_SECRET_KEY` nem outras variáveis criadas
+automaticamente pela integração da Vercel.
 
 O slug deve conter somente o trecho depois da primeira barra. Não use `admin`, `senha` ou outro nome previsível.
 
@@ -114,8 +114,8 @@ O teste automatizado confirma, entre outras validações, que registros ocultos 
 2. No painel da Vercel, escolha **Add New → Project** e importe o repositório.
 3. Confirme o framework **Vite**.
 4. Configure as três variáveis em **Settings → Environment Variables**:
-   - `SUPABASE_URL`
-   - `SUPABASE_SERVICE_ROLE_KEY` **ou** `SUPABASE_SECRET_KEY`
+   - `ICEWIND_DB_URL`
+   - `ICEWIND_DB_SECRET_KEY`
    - `MASTER_SLUG`
 5. Faça o deploy.
 

@@ -12,16 +12,14 @@ const PUBLIC_COLUMNS =
   'id,name,color,category,x,y,description,image_url,is_visible,mission_status,created_at,updated_at'
 
 function supabase() {
-  const url = (process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL)?.trim()
-  const serviceRoleKey = (
-    process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY
-  )?.trim()
+  const url = process.env.ICEWIND_DB_URL?.trim()
+  const serviceRoleKey = process.env.ICEWIND_DB_SECRET_KEY?.trim()
   if (!url || !serviceRoleKey) return null
 
   try {
     new URL(url)
   } catch {
-    throw new Error('SUPABASE_URL_INVALIDA')
+    throw new Error('ICEWIND_DB_URL_INVALIDA')
   }
 
   return createClient(url, serviceRoleKey, {
@@ -59,7 +57,7 @@ export default async function handler(request: ApiRequest, response: ApiResponse
     if (!database) {
       return response.status(503).json({
         error:
-          'Configure SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY (ou SUPABASE_SECRET_KEY) na Vercel.',
+          'Configure ICEWIND_DB_URL e ICEWIND_DB_SECRET_KEY na Vercel.',
       })
     }
 
@@ -137,8 +135,8 @@ export default async function handler(request: ApiRequest, response: ApiResponse
     console.error('Falha na API de marcadores:', error instanceof Error ? error.message : error)
     return response.status(500).json({
       error:
-        error instanceof Error && error.message === 'SUPABASE_URL_INVALIDA'
-          ? 'A variável SUPABASE_URL da Vercel não contém uma URL válida.'
+        error instanceof Error && error.message === 'ICEWIND_DB_URL_INVALIDA'
+          ? 'A variável ICEWIND_DB_URL da Vercel não contém uma URL válida.'
           : 'Não foi possível acessar os dados do mapa.',
     })
   }
