@@ -1,8 +1,11 @@
-const PUBLIC_COLUMNS = 'id,title,description,is_active,created_at,updated_at'
+const PUBLIC_COLUMNS = 'id,title,description,status,is_active,created_at,updated_at'
+
+type MissionStatus = 'notice' | 'active'
 
 interface MissionInput {
   title: string
   description: string
+  status: MissionStatus
   is_active: boolean
 }
 
@@ -38,10 +41,14 @@ function parseMissionInput(value: unknown): MissionInput {
   if (typeof input.is_active !== 'boolean') {
     throw new ValidationError('O estado da missão precisa ser verdadeiro ou falso.')
   }
+  if (input.status !== 'notice' && input.status !== 'active') {
+    throw new ValidationError('A missão precisa estar no quadro de avisos ou nas missões ativas.')
+  }
 
   return {
     title: text(input.title, 'título', 120, false),
     description: text(input.description, 'descrição', 8000),
+    status: input.status,
     is_active: input.is_active,
   }
 }

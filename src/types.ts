@@ -16,10 +16,13 @@ export interface MapMarker {
 
 export type MarkerInput = Omit<MapMarker, 'id' | 'created_at' | 'updated_at'>
 
+export type MissionStatus = 'notice' | 'active'
+
 export interface Mission {
   id: string
   title: string
   description: string
+  status: MissionStatus
   is_active: boolean
   created_at?: string
   updated_at?: string

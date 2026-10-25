@@ -146,6 +146,12 @@ h2 {
   gap: 1rem;
 }
 
+.mission-shortcuts {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
 .missions-trigger {
   display: inline-flex;
   min-height: 2.45rem;
@@ -165,7 +171,7 @@ h2 {
   background: rgba(214, 179, 106, 0.15);
 }
 
-.missions-trigger span {
+.missions-trigger__count {
   display: grid;
   min-width: 1.35rem;
   height: 1.35rem;
@@ -174,6 +180,10 @@ h2 {
   color: #122028;
   background: var(--gold);
   font-size: 0.68rem;
+}
+
+.missions-trigger__text {
+  white-space: nowrap;
 }
 
 .filter-bar {
@@ -600,6 +610,47 @@ h2 {
   font-size: 1.45rem;
 }
 
+.missions-board__tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  padding: 0.55rem;
+  border-bottom: 1px solid var(--line);
+  background: rgba(3, 10, 14, 0.38);
+}
+
+.missions-board__tabs button {
+  display: inline-flex;
+  min-height: 2.35rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.45rem 0.6rem;
+  border: 0;
+  border-radius: 0.55rem;
+  color: var(--muted);
+  background: transparent;
+  font-size: 0.72rem;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.missions-board__tabs button:hover,
+.missions-board__tabs button.is-active {
+  color: #f3e3bc;
+  background: rgba(214, 179, 106, 0.12);
+}
+
+.missions-board__tabs span {
+  display: grid;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  place-items: center;
+  border-radius: 999px;
+  color: #122028;
+  background: var(--gold);
+  font-size: 0.65rem;
+}
+
 .missions-board__list,
 .mission-detail,
 .mission-form {
@@ -664,6 +715,11 @@ h2 {
   color: var(--muted);
 }
 
+.mission-card__status.is-notice,
+.mission-badge.is-notice {
+  color: var(--gold);
+}
+
 .mission-card strong {
   color: #f5f1e8;
   font-family: Georgia, "Times New Roman", serif;
@@ -709,6 +765,7 @@ h2 {
 
 .mission-detail__actions {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   gap: 0.75rem;
   margin-top: 1.2rem;
@@ -1215,7 +1272,7 @@ h2 {
 
   .atlas-header__status span,
   .master-header__actions > span,
-  .master-header__actions .button--ghost {
+  .master-header__actions .master-public-link {
     display: none;
   }
 
@@ -1290,12 +1347,28 @@ h2 {
 }
 
 @media (max-width: 520px) {
+  .atlas-header,
+  .master-header {
+    flex-wrap: wrap;
+    gap: 0.55rem;
+  }
+
   .atlas-header__actions {
+    width: 100%;
     gap: 0.5rem;
   }
 
   .atlas-header__status {
-    font-size: 0.68rem;
+    display: none;
+  }
+
+  .mission-shortcuts {
+    width: 100%;
+  }
+
+  .missions-trigger {
+    flex: 1;
+    justify-content: center;
   }
 
   .missions-trigger {
@@ -1308,6 +1381,12 @@ h2 {
     min-height: 2.2rem;
     padding-inline: 0.6rem;
     font-size: 0.7rem;
+  }
+
+  .master-header__actions {
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: flex-end;
   }
 
   .marker-popup {

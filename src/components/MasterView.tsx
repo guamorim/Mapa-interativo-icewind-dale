@@ -11,7 +11,7 @@ import {
   updateMission,
 } from '../lib/api'
 import { DEFAULT_MARKER_COLOR } from '../lib/constants'
-import type { MapMarker, MarkerInput, Mission, MissionInput } from '../types'
+import type { MapMarker, MarkerInput, Mission, MissionInput, MissionStatus } from '../types'
 import { MapCanvas } from './MapCanvas'
 import { MarkerForm } from './MarkerForm'
 import { MarkerPopup } from './MarkerPopup'
@@ -27,6 +27,7 @@ export function MasterView({ slug }: MasterViewProps) {
   const [markers, setMarkers] = useState<MapMarker[]>([])
   const [missions, setMissions] = useState<Mission[]>([])
   const [missionsOpen, setMissionsOpen] = useState(false)
+  const [missionSection, setMissionSection] = useState<MissionStatus>('notice')
   const [selectedMarkerId, setSelectedMarkerId] = useState<string | null>(null)
   const [draft, setDraft] = useState<DraftMarker | null>(null)
   const [placing, setPlacing] = useState(false)
@@ -214,6 +215,11 @@ export function MasterView({ slug }: MasterViewProps) {
     setMessage({ kind: 'success', text: 'Missão excluída.' })
   }
 
+  function openMissions(section: MissionStatus) {
+    setMissionSection(section)
+    setMissionsOpen(true)
+  }
+
   if (invalidSlug) {
     return (
       <main className="empty-state">
@@ -234,10 +240,13 @@ export function MasterView({ slug }: MasterViewProps) {
         </div>
         <div className="master-header__actions">
           <span>{loading ? 'Carregando…' : `${markers.length} pontos cadastrados`}</span>
-          <button className="button button--ghost" type="button" onClick={() => setMissionsOpen(true)}>
-            Missões ({missions.filter((mission) => mission.is_active).length})
+          <button className="button button--ghost master-mission-trigger" type="button" onClick={() => openMissions('notice')}>
+            Quadro ({missions.filter((mission) => mission.status === 'notice').length})
           </button>
-          <a className="button button--ghost" href="/" target="_blank" rel="noreferrer">
+          <button className="button button--ghost master-mission-trigger" type="button" onClick={() => openMissions('active')}>
+            Missões ativas ({missions.filter((mission) => mission.status === 'active').length})
+          </button>
+          <a className="button button--ghost master-public-link" href="/" target="_blank" rel="noreferrer">
             Abrir visão pública
           </a>
           <button className="button button--primary" type="button" onClick={startPlacement}>
@@ -361,6 +370,7 @@ export function MasterView({ slug }: MasterViewProps) {
       <MissionsBoard
         open={missionsOpen}
         missions={missions}
+        initialSection={missionSection}
         editable
         onClose={() => setMissionsOpen(false)}
         onSave={saveMission}

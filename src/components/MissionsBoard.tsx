@@ -1,9 +1,10 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import type { Mission, MissionInput } from '../types'
+import type { Mission, MissionInput, MissionStatus } from '../types'
 
 interface MissionsBoardProps {
   open: boolean
   missions: Mission[]
+  initialSection: MissionStatus
   onClose: () => void
   editable?: boolean
   onSave?: (id: string | null, input: MissionInput) => Promise<Mission>
@@ -13,17 +14,24 @@ interface MissionsBoardProps {
 const EMPTY_MISSION: MissionInput = {
   title: '',
   description: '',
+  status: 'notice',
   is_active: true,
+}
+
+function sectionTitle(section: MissionStatus) {
+  return section === 'notice' ? 'Quadro de avisos' : 'Missões ativas'
 }
 
 export function MissionsBoard({
   open,
   missions,
+  initialSection,
   onClose,
   editable = false,
   onSave,
   onDelete,
 }: MissionsBoardProps) {
+  const [activeSection, setActiveSection] = useState<MissionStatus>(initialSection)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [draft, setDraft] = useState<MissionInput | null>(null)
@@ -31,15 +39,25 @@ export function MissionsBoard({
   const [error, setError] = useState<string | null>(null)
 
   const selected = missions.find((mission) => mission.id === selectedId) ?? null
+  const sectionMissions = missions.filter((mission) => mission.status === activeSection)
+  const noticeCount = missions.filter((mission) => mission.status === 'notice').length
+  const activeCount = missions.filter((mission) => mission.status === 'active').length
 
   useEffect(() => {
-    if (!open) {
+    if (open) {
+      setActiveSection(initialSection)
       setSelectedId(null)
       setEditingId(null)
       setDraft(null)
       setError(null)
+      return
     }
-  }, [open])
+
+    setSelectedId(null)
+    setEditingId(null)
+    setDraft(null)
+    setError(null)
+  }, [initialSection, open])
 
   useEffect(() => {
     if (selectedId && !missions.some((mission) => mission.id === selectedId)) {
@@ -48,6 +66,14 @@ export function MissionsBoard({
   }, [missions, selectedId])
 
   if (!open) return null
+
+  function selectSection(section: MissionStatus) {
+    setActiveSection(section)
+    setSelectedId(null)
+    setEditingId(null)
+    setDraft(null)
+    setError(null)
+  }
 
   function startCreate() {
     setEditingId(null)
@@ -61,6 +87,7 @@ export function MissionsBoard({
     setDraft({
       title: mission.title,
       description: mission.description,
+      status: mission.status,
       is_active: mission.is_active,
     })
     setError(null)
@@ -80,10 +107,33 @@ export function MissionsBoard({
       })
       setDraft(null)
       setEditingId(null)
+      setActiveSection(saved.status)
       setSelectedId(saved.id)
     } catch (requestError) {
       setError(
         requestError instanceof Error ? requestError.message : 'Não foi possível salvar a missão.',
+      )
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function moveMission(mission: Mission, status: MissionStatus) {
+    if (!onSave) return
+    setSaving(true)
+    setError(null)
+    try {
+      await onSave(mission.id, {
+        title: mission.title,
+        description: mission.description,
+        status,
+        is_active: mission.is_active,
+      })
+      setActiveSection(status)
+      setSelectedId(null)
+    } catch (requestError) {
+      setError(
+        requestError instanceof Error ? requestError.message : 'Não foi possível mover a missão.',
       )
     } finally {
       setSaving(false)
@@ -107,16 +157,35 @@ export function MissionsBoard({
   }
 
   return (
-    <aside className="missions-board" aria-label="Mural de missões">
+    <aside className="missions-board" aria-label="Missões compartilhadas">
       <header className="missions-board__header">
         <div>
           <span className="eyebrow">Mural compartilhado</span>
-          <h2>Missões</h2>
+          <h2>{sectionTitle(activeSection)}</h2>
         </div>
         <button className="icon-button" type="button" onClick={onClose} aria-label="Fechar missões">
           ×
         </button>
       </header>
+
+      <nav className="missions-board__tabs" aria-label="Seções de missões">
+        <button
+          className={activeSection === 'notice' ? 'is-active' : ''}
+          type="button"
+          aria-pressed={activeSection === 'notice'}
+          onClick={() => selectSection('notice')}
+        >
+          Quadro de avisos <span>{noticeCount}</span>
+        </button>
+        <button
+          className={activeSection === 'active' ? 'is-active' : ''}
+          type="button"
+          aria-pressed={activeSection === 'active'}
+          onClick={() => selectSection('active')}
+        >
+          Missões ativas <span>{activeCount}</span>
+        </button>
+      </nav>
 
       {error ? <p className="missions-board__error">{error}</p> : null}
 
@@ -132,7 +201,7 @@ export function MissionsBoard({
           >
             ← Voltar
           </button>
-          <h3>{editingId ? 'Editar missão' : 'Nova missão'}</h3>
+          <h3>{editingId ? 'Editar missão' : 'Novo aviso de missão'}</h3>
 
           <label>
             Título
@@ -161,8 +230,8 @@ export function MissionsBoard({
               onChange={(event) => setDraft({ ...draft, is_active: event.target.checked })}
             />
             <span>
-              <strong>Missão ativa</strong>
-              <small>Missões inativas não aparecem para os jogadores.</small>
+              <strong>Visível para os jogadores</strong>
+              <small>Quando desligado, somente o Mestre consegue ver a missão.</small>
             </span>
           </label>
 
@@ -173,10 +242,22 @@ export function MissionsBoard({
       ) : selected ? (
         <article className="mission-detail">
           <button className="mission-back" type="button" onClick={() => setSelectedId(null)}>
-            ← Todas as missões
+            ← {sectionTitle(activeSection)}
           </button>
-          <span className={`mission-badge${selected.is_active ? '' : ' is-inactive'}`}>
-            {selected.is_active ? 'Ativa' : 'Inativa'}
+          <span
+            className={`mission-badge${
+              !selected.is_active
+                ? ' is-inactive'
+                : selected.status === 'notice'
+                  ? ' is-notice'
+                  : ''
+            }`}
+          >
+            {!selected.is_active
+              ? 'Oculta dos jogadores'
+              : selected.status === 'notice'
+                ? 'No quadro de avisos'
+                : 'Missão ativa'}
           </span>
           <h3>{selected.title}</h3>
           {selected.description ? (
@@ -189,7 +270,15 @@ export function MissionsBoard({
               <button className="button button--danger" type="button" disabled={saving} onClick={() => void remove(selected)}>
                 Excluir
               </button>
-              <button className="button button--primary" type="button" onClick={() => startEdit(selected)}>
+              <button
+                className="button button--ghost"
+                type="button"
+                disabled={saving}
+                onClick={() => void moveMission(selected, selected.status === 'notice' ? 'active' : 'notice')}
+              >
+                {selected.status === 'notice' ? 'Mover para ativas' : 'Devolver ao quadro'}
+              </button>
+              <button className="button button--primary" type="button" disabled={saving} onClick={() => startEdit(selected)}>
                 Editar missão
               </button>
             </div>
@@ -197,22 +286,26 @@ export function MissionsBoard({
         </article>
       ) : (
         <div className="missions-board__list">
-          {editable ? (
+          {editable && activeSection === 'notice' ? (
             <button className="button button--primary mission-create" type="button" onClick={startCreate}>
-              + Nova missão
+              + Cadastrar missão no quadro
             </button>
           ) : null}
 
           <div className="mission-cards">
-            {missions.map((mission) => (
+            {sectionMissions.map((mission) => (
               <button
                 className={`mission-card${mission.is_active ? '' : ' is-inactive'}`}
                 type="button"
                 key={mission.id}
                 onClick={() => setSelectedId(mission.id)}
               >
-                <span className="mission-card__status">
-                  {mission.is_active ? 'Missão ativa' : 'Inativa'}
+                <span className={`mission-card__status${mission.status === 'notice' ? ' is-notice' : ''}`}>
+                  {!mission.is_active
+                    ? 'Oculta'
+                    : mission.status === 'notice'
+                      ? 'Disponível'
+                      : 'Em andamento'}
                 </span>
                 <strong>{mission.title}</strong>
                 <span className="mission-card__excerpt">
@@ -222,10 +315,16 @@ export function MissionsBoard({
             ))}
           </div>
 
-          {missions.length === 0 ? (
+          {sectionMissions.length === 0 ? (
             <div className="missions-empty">
               <span>✦</span>
-              <p>{editable ? 'Nenhuma missão cadastrada.' : 'Nenhuma missão ativa no momento.'}</p>
+              <p>
+                {activeSection === 'notice'
+                  ? editable
+                    ? 'Nenhuma missão cadastrada no quadro.'
+                    : 'Nenhum aviso de missão no momento.'
+                  : 'Nenhuma missão ativa no momento.'}
+              </p>
             </div>
           ) : null}
         </div>
