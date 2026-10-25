@@ -53,8 +53,8 @@ function markerIcon(marker: MapMarker, selected: boolean, editable: boolean) {
 
   return L.divIcon({
     className: 'fantasy-marker-icon',
-    iconSize: [180, 48],
-    iconAnchor: [90, 5],
+    iconSize: [18, 18],
+    iconAnchor: [9, 9],
     html: `
       <span class="fantasy-marker${hiddenClass}${selectedClass}${editorClass}" role="button" aria-label="${escapeHtml(label || 'Ponto sem identificação')}">
         <span class="fantasy-marker__dot" style="--marker-color:${escapeHtml(marker.color)}"></span>
@@ -161,7 +161,7 @@ export function MapCanvas({
             key={marker.id}
             position={toLatLng(marker)}
             icon={icons.get(marker.id)!}
-            draggable={editable}
+            draggable={editable && marker.id === selectedMarkerId}
             eventHandlers={{
               click: () => onSelectMarker(marker.id),
               dragend: (event: LeafletEvent) => {
