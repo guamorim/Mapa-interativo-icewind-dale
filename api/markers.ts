@@ -1,4 +1,3 @@
-import { createClient } from '@supabase/supabase-js'
 import type { ApiRequest, ApiResponse } from '../server/http-types'
 import { hasValidMasterSlug } from '../server/master-slug'
 import {
@@ -7,14 +6,20 @@ import {
   ValidationError,
   validMarkerId,
 } from '../server/marker-validation'
+import type { MapMarker } from '../src/types'
 
 const PUBLIC_COLUMNS =
   'id,name,color,category,x,y,description,image_url,is_visible,mission_status,created_at,updated_at'
 
-function supabase() {
+interface DatabaseConfig {
+  url: string
+  secretKey: string
+}
+
+function databaseConfig(): DatabaseConfig | null {
   const url = process.env.ICEWIND_DB_URL?.trim()
-  const serviceRoleKey = process.env.ICEWIND_DB_SECRET_KEY?.trim()
-  if (!url || !serviceRoleKey) return null
+  const secretKey = process.env.ICEWIND_DB_SECRET_KEY?.trim()
+  if (!url || !secretKey) return null
 
   try {
     new URL(url)
@@ -22,9 +27,43 @@ function supabase() {
     throw new Error('ICEWIND_DB_URL_INVALIDA')
   }
 
-  return createClient(url, serviceRoleKey, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  })
+  return { url: url.replace(/\/+$/, ''), secretKey }
+}
+
+async function databaseRequest<T>(
+  config: DatabaseConfig,
+  query: Record<string, string>,
+  init: RequestInit = {},
+) {
+  const endpoint = new URL(`${config.url}/rest/v1/markers`)
+  for (const [name, value] of Object.entries(query)) endpoint.searchParams.set(name, value)
+
+  const headers = new Headers(init.headers)
+  headers.set('Accept', 'application/json')
+  headers.set('apikey', config.secretKey)
+  if (init.body !== undefined) headers.set('Content-Type', 'application/json')
+
+  const result = await fetch(endpoint, { ...init, headers })
+  const rawBody = await result.text()
+  let body: unknown = null
+
+  if (rawBody) {
+    try {
+      body = JSON.parse(rawBody)
+    } catch {
+      body = rawBody
+    }
+  }
+
+  if (!result.ok) {
+    const detail =
+      body && typeof body === 'object' && 'message' in body
+        ? String((body as { message: unknown }).message)
+        : `HTTP ${result.status}`
+    throw new Error(`Supabase: ${detail}`)
+  }
+
+  return body as T
 }
 
 function firstQueryValue(value: string | string[] | undefined) {
@@ -53,7 +92,7 @@ export default async function handler(request: ApiRequest, response: ApiResponse
 
     if (request.method === 'OPTIONS') return response.status(204).end()
 
-    const database = supabase()
+    const database = databaseConfig()
     if (!database) {
       return response.status(503).json({
         error:
@@ -70,35 +109,37 @@ export default async function handler(request: ApiRequest, response: ApiResponse
 
     if (request.method === 'GET') {
       if (wantsMasterData) {
-        const { data, error } = await database
-          .from('markers')
-          .select(PUBLIC_COLUMNS)
-          .order('created_at', { ascending: true })
-        if (error) throw error
-        return response.status(200).json({ markers: data ?? [] })
+        const markers = await databaseRequest<MapMarker[]>(database, {
+          select: PUBLIC_COLUMNS,
+          order: 'created_at.asc',
+        })
+        return response.status(200).json({ markers: markers ?? [] })
       }
 
-      const { data, error } = await database
-        .from('markers')
-        .select(PUBLIC_COLUMNS)
-        .eq('is_visible', true)
-        .order('created_at', { ascending: true })
-      if (error) throw error
+      const markers = await databaseRequest<MapMarker[]>(database, {
+        select: PUBLIC_COLUMNS,
+        is_visible: 'eq.true',
+        order: 'created_at.asc',
+      })
 
       // Filtro duplicado de propósito: mesmo que a consulta seja alterada no futuro,
       // o endpoint público continua sem enviar registros ocultos.
-      return response.status(200).json({ markers: publicMarkersOnly(data ?? []) })
+      return response.status(200).json({ markers: publicMarkersOnly(markers ?? []) })
     }
 
     if (request.method === 'POST') {
       const marker = parseMarkerInput(request.body)
-      const { data, error } = await database
-        .from('markers')
-        .insert(marker)
-        .select(PUBLIC_COLUMNS)
-        .single()
-      if (error) throw error
-      return response.status(201).json({ marker: data })
+      const markers = await databaseRequest<MapMarker[]>(
+        database,
+        { select: PUBLIC_COLUMNS },
+        {
+          method: 'POST',
+          headers: { Prefer: 'return=representation' },
+          body: JSON.stringify(marker),
+        },
+      )
+      if (!markers[0]) throw new Error('Supabase não retornou o ponto criado.')
+      return response.status(201).json({ marker: markers[0] })
     }
 
     if (request.method === 'PUT') {
@@ -106,22 +147,24 @@ export default async function handler(request: ApiRequest, response: ApiResponse
       if (!validMarkerId(id)) return response.status(400).json({ error: 'ID de ponto inválido.' })
 
       const marker = parseMarkerInput(request.body)
-      const { data, error } = await database
-        .from('markers')
-        .update(marker)
-        .eq('id', id)
-        .select(PUBLIC_COLUMNS)
-        .single()
-      if (error) throw error
-      return response.status(200).json({ marker: data })
+      const markers = await databaseRequest<MapMarker[]>(
+        database,
+        { id: `eq.${id}`, select: PUBLIC_COLUMNS },
+        {
+          method: 'PATCH',
+          headers: { Prefer: 'return=representation' },
+          body: JSON.stringify(marker),
+        },
+      )
+      if (!markers[0]) throw new Error('Ponto não encontrado no Supabase.')
+      return response.status(200).json({ marker: markers[0] })
     }
 
     if (request.method === 'DELETE') {
       const id = queryValue(request, 'id')
       if (!validMarkerId(id)) return response.status(400).json({ error: 'ID de ponto inválido.' })
 
-      const { error } = await database.from('markers').delete().eq('id', id)
-      if (error) throw error
+      await databaseRequest(database, { id: `eq.${id}` }, { method: 'DELETE' })
       return response.status(200).json({ ok: true })
     }
 
