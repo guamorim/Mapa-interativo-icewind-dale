@@ -1,11 +1,6 @@
-import type { MapMarker, MarkerInput, MissionStatus } from '../src/types'
+import type { MapMarker, MarkerInput } from '../src/types'
 
 const HEX_COLOR = /^#[0-9a-f]{6}$/i
-const MISSION_STATES = new Set<Exclude<MissionStatus, null>>([
-  'available',
-  'in_progress',
-  'completed',
-])
 
 export class ValidationError extends Error {}
 
@@ -38,12 +33,15 @@ function imageUrl(value: unknown) {
   }
 }
 
-function missionStatus(value: unknown): MissionStatus {
-  if (value === null || value === undefined || value === '') return null
-  if (typeof value !== 'string' || !MISSION_STATES.has(value as Exclude<MissionStatus, null>)) {
-    throw new ValidationError('Estado de missão inválido.')
+function npcList(value: unknown) {
+  if (value === null || value === undefined) return []
+  if (!Array.isArray(value) || value.length > 50) {
+    throw new ValidationError('A lista pode conter no máximo 50 NPCs.')
   }
-  return value as Exclude<MissionStatus, null>
+
+  return Array.from(
+    new Set(value.map((npc) => text(npc, 'NPC', 120, false))),
+  )
 }
 
 export function parseMarkerInput(value: unknown): MarkerInput {
@@ -65,9 +63,9 @@ export function parseMarkerInput(value: unknown): MarkerInput {
     x: coordinate(input.x, 'x'),
     y: coordinate(input.y, 'y'),
     description: text(input.description, 'descrição', 4000),
+    npcs: npcList(input.npcs),
     image_url: imageUrl(input.image_url),
     is_visible: input.is_visible,
-    mission_status: missionStatus(input.mission_status),
   }
 }
 

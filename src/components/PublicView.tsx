@@ -1,13 +1,16 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { getPublicMarkers } from '../lib/api'
+import { getPublicMarkers, getPublicMissions } from '../lib/api'
 import { PUBLIC_REFRESH_INTERVAL_MS } from '../lib/constants'
-import type { MapMarker } from '../types'
+import type { MapMarker, Mission } from '../types'
 import { FilterBar } from './FilterBar'
 import { MapCanvas } from './MapCanvas'
 import { MarkerPopup } from './MarkerPopup'
+import { MissionsBoard } from './MissionsBoard'
 
 export function PublicView() {
   const [markers, setMarkers] = useState<MapMarker[]>([])
+  const [missions, setMissions] = useState<Mission[]>([])
+  const [missionsOpen, setMissionsOpen] = useState(false)
   const [selectedMarkerId, setSelectedMarkerId] = useState<string | null>(null)
   const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(true)
@@ -17,8 +20,12 @@ export function PublicView() {
   const loadMarkers = useCallback(async (quiet = false) => {
     if (!quiet) setLoading(true)
     try {
-      const nextMarkers = await getPublicMarkers()
+      const [nextMarkers, nextMissions] = await Promise.all([
+        getPublicMarkers(),
+        getPublicMissions(),
+      ])
       setMarkers(nextMarkers)
+      setMissions(nextMissions)
       setLastUpdated(new Date())
       setError(null)
     } catch (requestError) {
@@ -76,11 +83,16 @@ export function PublicView() {
           <span className="eyebrow">Mão Cinzenta</span>
           <h1>Atlas de Icewind Dale</h1>
         </div>
-        <div className="atlas-header__status" aria-live="polite">
-          {loading ? 'Consultando o atlas…' : `${markers.length} pontos revelados`}
-          {lastUpdated ? (
-            <span>Atualizado às {lastUpdated.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
-          ) : null}
+        <div className="atlas-header__actions">
+          <button className="missions-trigger" type="button" onClick={() => setMissionsOpen(true)}>
+            Missões <span>{missions.length}</span>
+          </button>
+          <div className="atlas-header__status" aria-live="polite">
+            {loading ? 'Consultando o atlas…' : `${markers.length} pontos revelados`}
+            {lastUpdated ? (
+              <span>Atualizado às {lastUpdated.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
+            ) : null}
+          </div>
         </div>
       </header>
 
@@ -110,6 +122,12 @@ export function PublicView() {
           <MarkerPopup marker={selectedMarker} onClose={() => setSelectedMarkerId(null)} />
         ) : null}
       </section>
+
+      <MissionsBoard
+        open={missionsOpen}
+        missions={missions}
+        onClose={() => setMissionsOpen(false)}
+      />
     </main>
   )
 }

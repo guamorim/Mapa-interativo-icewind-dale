@@ -24,9 +24,9 @@ describe('validação de marcadores', () => {
     x: 0.33,
     y: 0.59,
     description: '',
+    npcs: [],
     image_url: null,
     is_visible: true,
-    mission_status: null,
   }
 
   it('aceita coordenadas normalizadas', () => {
@@ -35,5 +35,20 @@ describe('validação de marcadores', () => {
 
   it('rejeita coordenadas fora do mapa', () => {
     expect(() => parseMarkerInput({ ...validMarker, x: 1.2 })).toThrow(ValidationError)
+  })
+
+  it('normaliza nomes de NPCs e remove duplicatas', () => {
+    expect(
+      parseMarkerInput({
+        ...validMarker,
+        npcs: [' Duvessa Shane ', 'Markham Southwell', 'Duvessa Shane'],
+      }).npcs,
+    ).toEqual(['Duvessa Shane', 'Markham Southwell'])
+  })
+
+  it('rejeita listas com mais de 50 NPCs', () => {
+    expect(() =>
+      parseMarkerInput({ ...validMarker, npcs: Array.from({ length: 51 }, (_, i) => `NPC ${i}`) }),
+    ).toThrow(ValidationError)
   })
 })

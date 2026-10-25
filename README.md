@@ -11,7 +11,8 @@ O mapa usa a imagem estática original, Leaflet com `CRS.Simple` e coordenadas n
 
 - Zoom, arraste, controles visuais e gestos de toque.
 - Pontos circulares coloridos com o nome abaixo, sem pinos tradicionais.
-- Popup controlado pelo React com descrição, imagem e estado de missão.
+- Popup controlado pelo React com descrição, imagem e lista de NPCs.
+- Mural global de missões ativas, compartilhado por todos os jogadores e editável somente pelo Mestre.
 - Filtros por categoria na visão pública.
 - Editor para criar, editar, arrastar, revelar, ocultar e excluir pontos.
 - Atualização pública automática a cada 45 segundos.

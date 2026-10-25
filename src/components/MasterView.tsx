@@ -2,15 +2,20 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   ApiError,
   createMarker,
+  createMission,
   deleteMarker,
+  deleteMission,
   getMasterMarkers,
+  getMasterMissions,
   updateMarker,
+  updateMission,
 } from '../lib/api'
 import { DEFAULT_MARKER_COLOR } from '../lib/constants'
-import type { MapMarker, MarkerInput } from '../types'
+import type { MapMarker, MarkerInput, Mission, MissionInput } from '../types'
 import { MapCanvas } from './MapCanvas'
 import { MarkerForm } from './MarkerForm'
 import { MarkerPopup } from './MarkerPopup'
+import { MissionsBoard } from './MissionsBoard'
 
 interface MasterViewProps {
   slug: string
@@ -20,6 +25,8 @@ type DraftMarker = MarkerInput & { id?: undefined }
 
 export function MasterView({ slug }: MasterViewProps) {
   const [markers, setMarkers] = useState<MapMarker[]>([])
+  const [missions, setMissions] = useState<Mission[]>([])
+  const [missionsOpen, setMissionsOpen] = useState(false)
   const [selectedMarkerId, setSelectedMarkerId] = useState<string | null>(null)
   const [draft, setDraft] = useState<DraftMarker | null>(null)
   const [placing, setPlacing] = useState(false)
@@ -33,7 +40,12 @@ export function MasterView({ slug }: MasterViewProps) {
   const loadMarkers = useCallback(async () => {
     setLoading(true)
     try {
-      setMarkers(await getMasterMarkers(slug))
+      const [nextMarkers, nextMissions] = await Promise.all([
+        getMasterMarkers(slug),
+        getMasterMissions(slug),
+      ])
+      setMarkers(nextMarkers)
+      setMissions(nextMissions)
       setInvalidSlug(false)
       setMessage(null)
     } catch (requestError) {
@@ -98,9 +110,9 @@ export function MasterView({ slug }: MasterViewProps) {
       x,
       y,
       description: '',
+      npcs: [],
       image_url: null,
       is_visible: false,
-      mission_status: null,
     })
     setPlacing(false)
     setPanelOpen(true)
@@ -182,6 +194,25 @@ export function MasterView({ slug }: MasterViewProps) {
     }
   }
 
+  async function saveMission(id: string | null, input: MissionInput) {
+    const saved = id
+      ? await updateMission(slug, id, input)
+      : await createMission(slug, input)
+    setMissions((current) =>
+      id
+        ? current.map((mission) => (mission.id === saved.id ? saved : mission))
+        : [saved, ...current],
+    )
+    setMessage({ kind: 'success', text: id ? 'Missão atualizada.' : 'Missão criada.' })
+    return saved
+  }
+
+  async function removeMission(mission: Mission) {
+    await deleteMission(slug, mission.id)
+    setMissions((current) => current.filter((item) => item.id !== mission.id))
+    setMessage({ kind: 'success', text: 'Missão excluída.' })
+  }
+
   if (invalidSlug) {
     return (
       <main className="empty-state">
@@ -202,6 +233,9 @@ export function MasterView({ slug }: MasterViewProps) {
         </div>
         <div className="master-header__actions">
           <span>{loading ? 'Carregando…' : `${markers.length} pontos cadastrados`}</span>
+          <button className="button button--ghost" type="button" onClick={() => setMissionsOpen(true)}>
+            Missões ({missions.filter((mission) => mission.is_active).length})
+          </button>
           <a className="button button--ghost" href="/" target="_blank" rel="noreferrer">
             Abrir visão pública
           </a>
@@ -322,6 +356,15 @@ export function MasterView({ slug }: MasterViewProps) {
           </div>
         </aside>
       </div>
+
+      <MissionsBoard
+        open={missionsOpen}
+        missions={missions}
+        editable
+        onClose={() => setMissionsOpen(false)}
+        onSave={saveMission}
+        onDelete={removeMission}
+      />
     </main>
   )
 }

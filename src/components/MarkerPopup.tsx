@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { MISSION_STATUS_LABELS } from '../lib/constants'
 import type { MapMarker } from '../types'
 
 interface MarkerPopupProps {
@@ -39,10 +38,15 @@ export function MarkerPopup({ marker, onClose }: MarkerPopupProps) {
         ) : (
           <p className="muted">Nenhuma informação pública foi adicionada.</p>
         )}
-        {marker.mission_status ? (
-          <div className={`mission-state mission-state--${marker.mission_status}`}>
-            Missão: {MISSION_STATUS_LABELS[marker.mission_status]}
-          </div>
+        {(marker.npcs ?? []).length > 0 ? (
+          <section className="marker-popup__npcs" aria-label="NPCs deste local">
+            <h3>NPCs</h3>
+            <ul>
+              {marker.npcs.map((npc) => (
+                <li key={npc}>{npc}</li>
+              ))}
+            </ul>
+          </section>
         ) : null}
       </div>
     </aside>

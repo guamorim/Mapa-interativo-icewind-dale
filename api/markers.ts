@@ -1,11 +1,7 @@
 const PUBLIC_COLUMNS =
-  'id,name,color,category,x,y,description,image_url,is_visible,mission_status,created_at,updated_at'
+  'id,name,color,category,x,y,description,npcs,image_url,is_visible,created_at,updated_at'
 
 const HEX_COLOR = /^#[0-9a-f]{6}$/i
-const MISSION_STATES = new Set(['available', 'in_progress', 'completed'])
-
-type MissionStatus = 'available' | 'in_progress' | 'completed' | null
-
 interface MarkerInput {
   name: string
   color: string
@@ -13,9 +9,9 @@ interface MarkerInput {
   x: number
   y: number
   description: string
+  npcs: string[]
   image_url: string | null
   is_visible: boolean
-  mission_status: MissionStatus
 }
 
 interface DatabaseMarker extends MarkerInput {
@@ -60,12 +56,15 @@ function imageUrl(value: unknown) {
   }
 }
 
-function missionStatus(value: unknown): MissionStatus {
-  if (value === null || value === undefined || value === '') return null
-  if (typeof value !== 'string' || !MISSION_STATES.has(value)) {
-    throw new ValidationError('Estado de missão inválido.')
+function npcList(value: unknown) {
+  if (value === null || value === undefined) return []
+  if (!Array.isArray(value) || value.length > 50) {
+    throw new ValidationError('A lista pode conter no máximo 50 NPCs.')
   }
-  return value as Exclude<MissionStatus, null>
+
+  return Array.from(
+    new Set(value.map((npc) => text(npc, 'NPC', 120, false))),
+  )
 }
 
 function parseMarkerInput(value: unknown): MarkerInput {
@@ -87,9 +86,9 @@ function parseMarkerInput(value: unknown): MarkerInput {
     x: coordinate(input.x, 'x'),
     y: coordinate(input.y, 'y'),
     description: text(input.description, 'descrição', 4000),
+    npcs: npcList(input.npcs),
     image_url: imageUrl(input.image_url),
     is_visible: input.is_visible,
-    mission_status: missionStatus(input.mission_status),
   }
 }
 

@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { DEFAULT_MARKER_COLOR } from '../lib/constants'
-import type { MapMarker, MarkerInput, MissionStatus } from '../types'
+import type { MapMarker, MarkerInput } from '../types'
 
 type EditableMarker = MapMarker | (MarkerInput & { id?: undefined })
 
@@ -20,9 +20,9 @@ const EMPTY_MARKER: MarkerInput = {
   x: 0.5,
   y: 0.5,
   description: '',
+  npcs: [],
   image_url: null,
   is_visible: false,
-  mission_status: null,
 }
 
 export function MarkerForm({
@@ -46,6 +46,7 @@ export function MarkerForm({
       name: form.name.trim(),
       category: form.category.trim() || 'Outro',
       description: form.description.trim(),
+      npcs: Array.from(new Set(form.npcs.map((npc) => npc.trim()).filter(Boolean))),
       image_url: form.image_url?.trim() || null,
     })
   }
@@ -112,6 +113,16 @@ export function MarkerForm({
       </label>
 
       <label>
+        NPCs do local <span className="optional">um por linha</span>
+        <textarea
+          value={form.npcs.join('\n')}
+          rows={4}
+          placeholder={'Duvessa Shane\nMarkham Southwell'}
+          onChange={(event) => setForm({ ...form, npcs: event.target.value.split('\n') })}
+        />
+      </label>
+
+      <label>
         URL da imagem <span className="optional">opcional</span>
         <input
           type="url"
@@ -119,24 +130,6 @@ export function MarkerForm({
           placeholder="https://…"
           onChange={(event) => setForm({ ...form, image_url: event.target.value || null })}
         />
-      </label>
-
-      <label>
-        Estado da missão <span className="optional">opcional</span>
-        <select
-          value={form.mission_status ?? ''}
-          onChange={(event) =>
-            setForm({
-              ...form,
-              mission_status: (event.target.value || null) as MissionStatus,
-            })
-          }
-        >
-          <option value="">Sem missão associada</option>
-          <option value="available">Disponível</option>
-          <option value="in_progress">Em andamento</option>
-          <option value="completed">Concluída</option>
-        </select>
       </label>
 
       <label className="visibility-control">

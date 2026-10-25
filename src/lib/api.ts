@@ -1,4 +1,4 @@
-import type { MapMarker, MarkerInput } from '../types'
+import type { MapMarker, MarkerInput, Mission, MissionInput } from '../types'
 
 export class ApiError extends Error {
   status: number
@@ -78,6 +78,50 @@ export async function updateMarker(
 
 export async function deleteMarker(slug: string, id: string): Promise<void> {
   await request<{ ok: true }>(`/api/markers?id=${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+    headers: masterHeaders(slug),
+  })
+}
+
+export async function getPublicMissions(): Promise<Mission[]> {
+  const result = await request<{ missions: Mission[] }>('/api/missions')
+  return result.missions
+}
+
+export async function getMasterMissions(slug: string): Promise<Mission[]> {
+  const result = await request<{ missions: Mission[] }>('/api/missions?scope=all', {
+    headers: masterHeaders(slug),
+  })
+  return result.missions
+}
+
+export async function createMission(slug: string, mission: MissionInput): Promise<Mission> {
+  const result = await request<{ mission: Mission }>('/api/missions', {
+    method: 'POST',
+    headers: masterHeaders(slug),
+    body: JSON.stringify(mission),
+  })
+  return result.mission
+}
+
+export async function updateMission(
+  slug: string,
+  id: string,
+  mission: MissionInput,
+): Promise<Mission> {
+  const result = await request<{ mission: Mission }>(
+    `/api/missions?id=${encodeURIComponent(id)}`,
+    {
+      method: 'PUT',
+      headers: masterHeaders(slug),
+      body: JSON.stringify(mission),
+    },
+  )
+  return result.mission
+}
+
+export async function deleteMission(slug: string, id: string): Promise<void> {
+  await request<{ ok: true }>(`/api/missions?id=${encodeURIComponent(id)}`, {
     method: 'DELETE',
     headers: masterHeaders(slug),
   })
