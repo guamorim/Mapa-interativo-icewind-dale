@@ -405,11 +405,52 @@ h2 {
   }
 }
 
+.marker-popup__image-button {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 0;
+  background: #081117;
+  cursor: zoom-in;
+}
+
 .marker-popup__image {
   display: block;
   width: 100%;
   max-height: 13rem;
   object-fit: cover;
+  transition: transform 180ms ease, filter 180ms ease;
+}
+
+.marker-popup__image-button:hover .marker-popup__image,
+.marker-popup__image-button:focus-visible .marker-popup__image {
+  filter: brightness(0.72);
+  transform: scale(1.025);
+}
+
+.marker-popup__image-button span {
+  position: absolute;
+  right: 0.7rem;
+  bottom: 0.65rem;
+  padding: 0.3rem 0.55rem;
+  border: 1px solid rgba(255, 255, 255, 0.38);
+  border-radius: 999px;
+  color: #f7fbfc;
+  background: rgba(5, 12, 16, 0.78);
+  font-size: 0.7rem;
+  letter-spacing: 0.03em;
+  opacity: 0;
+  transform: translateY(0.25rem);
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+
+.marker-popup__image-button:hover span,
+.marker-popup__image-button:focus-visible span {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .marker-popup__body {
@@ -430,13 +471,13 @@ h2 {
   white-space: pre-wrap;
 }
 
-.marker-popup__npcs {
+.marker-popup__list {
   margin-top: 1rem;
   padding-top: 0.85rem;
   border-top: 1px solid rgba(200, 225, 230, 0.16);
 }
 
-.marker-popup__npcs h3 {
+.marker-popup__list h3 {
   margin: 0 0 0.45rem;
   color: #ead7a8;
   font-size: 0.76rem;
@@ -444,7 +485,7 @@ h2 {
   text-transform: uppercase;
 }
 
-.marker-popup__npcs ul {
+.marker-popup__list ul {
   display: grid;
   gap: 0.3rem;
   margin: 0;
@@ -459,6 +500,61 @@ h2 {
   top: 0.65rem;
   right: 0.65rem;
   background: rgba(5, 12, 16, 0.8) !important;
+}
+
+.image-lightbox {
+  position: fixed;
+  z-index: 2000;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: clamp(1rem, 4vw, 3.5rem);
+  background: rgba(2, 7, 10, 0.92);
+  backdrop-filter: blur(8px);
+  animation: lightbox-in 160ms ease-out;
+  cursor: zoom-out;
+}
+
+@keyframes lightbox-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.image-lightbox figure {
+  display: grid;
+  max-width: 100%;
+  max-height: 100%;
+  margin: 0;
+  place-items: center;
+  cursor: default;
+}
+
+.image-lightbox img {
+  display: block;
+  max-width: 100%;
+  max-height: calc(100dvh - 7rem);
+  border: 1px solid rgba(220, 236, 239, 0.32);
+  border-radius: 0.5rem;
+  object-fit: contain;
+  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.72);
+}
+
+.image-lightbox figcaption {
+  margin-top: 0.75rem;
+  color: #dce5e7;
+  font-size: 0.82rem;
+  letter-spacing: 0.04em;
+  text-align: center;
+}
+
+.image-lightbox__close {
+  position: fixed;
+  z-index: 1;
+  top: max(1rem, env(safe-area-inset-top));
+  right: max(1rem, env(safe-area-inset-right));
+  color: #f7fbfc;
+  background: rgba(18, 33, 41, 0.92) !important;
 }
 
 .missions-board {

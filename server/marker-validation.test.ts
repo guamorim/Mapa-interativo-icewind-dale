@@ -25,6 +25,7 @@ describe('validação de marcadores', () => {
     y: 0.59,
     description: '',
     npcs: [],
+    locations: [],
     image_url: null,
     is_visible: true,
   }
@@ -49,6 +50,24 @@ describe('validação de marcadores', () => {
   it('rejeita listas com mais de 50 NPCs', () => {
     expect(() =>
       parseMarkerInput({ ...validMarker, npcs: Array.from({ length: 51 }, (_, i) => `NPC ${i}`) }),
+    ).toThrow(ValidationError)
+  })
+
+  it('normaliza locais e remove duplicatas', () => {
+    expect(
+      parseMarkerInput({
+        ...validMarker,
+        locations: [' Taverna Braços de Espuma ', 'Mercado', 'Taverna Braços de Espuma'],
+      }).locations,
+    ).toEqual(['Taverna Braços de Espuma', 'Mercado'])
+  })
+
+  it('rejeita listas com mais de 100 locais', () => {
+    expect(() =>
+      parseMarkerInput({
+        ...validMarker,
+        locations: Array.from({ length: 101 }, (_, i) => `Local ${i}`),
+      }),
     ).toThrow(ValidationError)
   })
 })

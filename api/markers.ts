@@ -1,5 +1,5 @@
 const PUBLIC_COLUMNS =
-  'id,name,color,category,x,y,description,npcs,image_url,is_visible,created_at,updated_at'
+  'id,name,color,category,x,y,description,npcs,locations,image_url,is_visible,created_at,updated_at'
 
 const HEX_COLOR = /^#[0-9a-f]{6}$/i
 interface MarkerInput {
@@ -10,6 +10,7 @@ interface MarkerInput {
   y: number
   description: string
   npcs: string[]
+  locations: string[]
   image_url: string | null
   is_visible: boolean
 }
@@ -67,6 +68,17 @@ function npcList(value: unknown) {
   )
 }
 
+function locationList(value: unknown) {
+  if (value === null || value === undefined) return []
+  if (!Array.isArray(value) || value.length > 100) {
+    throw new ValidationError('A lista pode conter no máximo 100 locais.')
+  }
+
+  return Array.from(
+    new Set(value.map((location) => text(location, 'local', 120, false))),
+  )
+}
+
 function parseMarkerInput(value: unknown): MarkerInput {
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
     throw new ValidationError('Corpo da solicitação inválido.')
@@ -87,6 +99,7 @@ function parseMarkerInput(value: unknown): MarkerInput {
     y: coordinate(input.y, 'y'),
     description: text(input.description, 'descrição', 4000),
     npcs: npcList(input.npcs),
+    locations: locationList(input.locations),
     image_url: imageUrl(input.image_url),
     is_visible: input.is_visible,
   }

@@ -21,6 +21,7 @@ const EMPTY_MARKER: MarkerInput = {
   y: 0.5,
   description: '',
   npcs: [],
+  locations: [],
   image_url: null,
   is_visible: false,
 }
@@ -47,6 +48,9 @@ export function MarkerForm({
       category: form.category.trim() || 'Outro',
       description: form.description.trim(),
       npcs: Array.from(new Set(form.npcs.map((npc) => npc.trim()).filter(Boolean))),
+      locations: Array.from(
+        new Set(form.locations.map((location) => location.trim()).filter(Boolean)),
+      ),
       image_url: form.image_url?.trim() || null,
     })
   }
@@ -119,6 +123,16 @@ export function MarkerForm({
           rows={4}
           placeholder={'Duvessa Shane\nMarkham Southwell'}
           onChange={(event) => setForm({ ...form, npcs: event.target.value.split('\n') })}
+        />
+      </label>
+
+      <label>
+        Locais e estabelecimentos <span className="optional">um por linha</span>
+        <textarea
+          value={form.locations.join('\n')}
+          rows={4}
+          placeholder={'Taverna Braços de Espuma\nMercado de Easthaven'}
+          onChange={(event) => setForm({ ...form, locations: event.target.value.split('\n') })}
         />
       </label>
 

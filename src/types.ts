@@ -7,6 +7,7 @@ export interface MapMarker {
   y: number
   description: string
   npcs: string[]
+  locations: string[]
   image_url: string | null
   is_visible: boolean
   created_at?: string

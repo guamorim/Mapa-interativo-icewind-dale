@@ -111,6 +111,7 @@ export function MasterView({ slug }: MasterViewProps) {
       y,
       description: '',
       npcs: [],
+      locations: [],
       image_url: null,
       is_visible: false,
     })

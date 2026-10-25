@@ -9,6 +9,7 @@ create table if not exists public.markers (
   y double precision not null check (y between 0 and 1),
   description text not null default '' check (char_length(description) <= 4000),
   npcs text[] not null default '{}'::text[],
+  locations text[] not null default '{}'::text[],
   image_url text,
   is_visible boolean not null default false,
   created_at timestamptz not null default now(),
@@ -18,6 +19,9 @@ create table if not exists public.markers (
 -- Mantém a migração reaplicável em projetos que já possuem a tabela.
 alter table public.markers
   add column if not exists npcs text[] not null default '{}'::text[];
+
+alter table public.markers
+  add column if not exists locations text[] not null default '{}'::text[];
 
 -- Missões agora pertencem ao mural global, não a pontos específicos do mapa.
 alter table public.markers drop column if exists mission_status;
