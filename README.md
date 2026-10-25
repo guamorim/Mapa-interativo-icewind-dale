@@ -10,7 +10,7 @@ O mapa usa a imagem estática original, Leaflet com `CRS.Simple` e coordenadas n
 ## O que já está incluído
 
 - Zoom, arraste, controles visuais e gestos de toque.
-- Pontos circulares coloridos com o nome abaixo, sem pinos tradicionais.
+- Pontos circulares coloridos com o nome abaixo, sem pinos tradicionais, que crescem junto com o zoom.
 - Popup controlado pelo React com descrição, imagem ampliável e listas de NPCs e locais.
 - Mural global de missões ativas, compartilhado por todos os jogadores e editável somente pelo Mestre.
 - Filtros por categoria na visão pública.

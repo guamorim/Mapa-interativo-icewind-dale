@@ -320,6 +320,9 @@ h2 {
   justify-content: center;
   cursor: pointer;
   pointer-events: none;
+  transform: scale(var(--marker-zoom-scale, 1));
+  transform-origin: center center;
+  transition: transform 120ms ease-out;
 }
 
 .fantasy-marker__dot {

@@ -104,6 +104,30 @@ function ResizeWatcher() {
   return null
 }
 
+function MarkerZoomScaler() {
+  const map = useMap()
+
+  useEffect(() => {
+    const container = map.getContainer()
+
+    function updateMarkerScale() {
+      const zoom = map.getZoom()
+      const scale = Math.min(2.4, Math.max(1, 1 + (zoom + 1.25) * 0.3))
+      container.style.setProperty('--marker-zoom-scale', scale.toFixed(3))
+    }
+
+    updateMarkerScale()
+    map.on('zoom', updateMarkerScale)
+
+    return () => {
+      map.off('zoom', updateMarkerScale)
+      container.style.removeProperty('--marker-zoom-scale')
+    }
+  }, [map])
+
+  return null
+}
+
 export function MapCanvas({
   markers,
   selectedMarkerId,
@@ -155,6 +179,7 @@ export function MapCanvas({
         <ZoomControl position="bottomright" />
         <MapClickHandler enabled={placementMode} onMapClick={onMapClick} />
         <ResizeWatcher />
+        <MarkerZoomScaler />
 
         {markers.map((marker) => (
           <Marker
