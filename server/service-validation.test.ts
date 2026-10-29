@@ -4,7 +4,7 @@ import {
   parseSettlementServicesImport,
   publicServicesOnly,
   ServiceValidationError,
-} from './service-validation'
+} from '../api/services'
 
 describe('validação de lojas e serviços', () => {
   const validService = {
