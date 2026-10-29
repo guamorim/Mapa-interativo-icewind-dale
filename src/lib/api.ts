@@ -1,4 +1,12 @@
-import type { MapMarker, MarkerInput, Mission, MissionInput } from '../types'
+import type {
+  MapMarker,
+  MarkerInput,
+  Mission,
+  MissionInput,
+  SettlementService,
+  SettlementServiceInput,
+  SettlementServicesImport,
+} from '../types'
 
 export class ApiError extends Error {
   status: number
@@ -124,5 +132,69 @@ export async function deleteMission(slug: string, id: string): Promise<void> {
   await request<{ ok: true }>(`/api/missions?id=${encodeURIComponent(id)}`, {
     method: 'DELETE',
     headers: masterHeaders(slug),
+  })
+}
+
+export async function getPublicServices(markerId: string): Promise<SettlementService[]> {
+  const result = await request<{ services: SettlementService[] }>(
+    `/api/services?marker_id=${encodeURIComponent(markerId)}`,
+  )
+  return result.services
+}
+
+export async function getMasterServices(
+  slug: string,
+  markerId: string,
+): Promise<SettlementService[]> {
+  const result = await request<{ services: SettlementService[] }>(
+    `/api/services?scope=all&marker_id=${encodeURIComponent(markerId)}`,
+    { headers: masterHeaders(slug) },
+  )
+  return result.services
+}
+
+export async function createSettlementService(
+  slug: string,
+  service: SettlementServiceInput,
+): Promise<SettlementService> {
+  const result = await request<{ service: SettlementService }>('/api/services', {
+    method: 'POST',
+    headers: masterHeaders(slug),
+    body: JSON.stringify(service),
+  })
+  return result.service
+}
+
+export async function updateSettlementService(
+  slug: string,
+  id: string,
+  service: SettlementServiceInput,
+): Promise<SettlementService> {
+  const result = await request<{ service: SettlementService }>(
+    `/api/services?id=${encodeURIComponent(id)}`,
+    {
+      method: 'PUT',
+      headers: masterHeaders(slug),
+      body: JSON.stringify(service),
+    },
+  )
+  return result.service
+}
+
+export async function deleteSettlementService(slug: string, id: string): Promise<void> {
+  await request<{ ok: true }>(`/api/services?id=${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+    headers: masterHeaders(slug),
+  })
+}
+
+export async function importSettlementServices(
+  slug: string,
+  payload: SettlementServicesImport,
+): Promise<{ imported: number; services: SettlementService[] }> {
+  return request('/api/services?bulk=1', {
+    method: 'POST',
+    headers: masterHeaders(slug),
+    body: JSON.stringify(payload),
   })
 }

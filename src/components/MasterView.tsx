@@ -16,6 +16,7 @@ import { MapCanvas } from './MapCanvas'
 import { MarkerForm } from './MarkerForm'
 import { MarkerPopup } from './MarkerPopup'
 import { MissionsBoard } from './MissionsBoard'
+import { SettlementServicesPanel } from './SettlementServicesPanel'
 
 interface MasterViewProps {
   slug: string
@@ -37,6 +38,7 @@ export function MasterView({ slug }: MasterViewProps) {
   const [message, setMessage] = useState<{ kind: 'success' | 'error'; text: string } | null>(null)
   const [panelOpen, setPanelOpen] = useState(true)
   const [search, setSearch] = useState('')
+  const [servicesMarker, setServicesMarker] = useState<MapMarker | null>(null)
 
   const loadMarkers = useCallback(async () => {
     setLoading(true)
@@ -157,6 +159,7 @@ export function MasterView({ slug }: MasterViewProps) {
       await deleteMarker(slug, selectedMarker.id)
       setMarkers((current) => current.filter((marker) => marker.id !== selectedMarker.id))
       setSelectedMarkerId(null)
+      setServicesMarker(null)
       setMessage({ kind: 'success', text: 'Ponto excluído.' })
     } catch (requestError) {
       setMessage({
@@ -318,6 +321,11 @@ export function MasterView({ slug }: MasterViewProps) {
                   setDraft(null)
                 }}
                 onDelete={selectedMarker ? removeCurrent : undefined}
+                onManageServices={
+                  selectedMarker?.category.trim().toLocaleLowerCase('pt-BR') === 'assentamento'
+                    ? () => setServicesMarker(selectedMarker)
+                    : undefined
+                }
               />
             ) : (
               <div className="marker-index">
@@ -376,6 +384,16 @@ export function MasterView({ slug }: MasterViewProps) {
         onSave={saveMission}
         onDelete={removeMission}
       />
+
+      {servicesMarker ? (
+        <SettlementServicesPanel
+          open
+          marker={servicesMarker}
+          editable
+          slug={slug}
+          onClose={() => setServicesMarker(null)}
+        />
+      ) : null}
     </main>
   )
 }

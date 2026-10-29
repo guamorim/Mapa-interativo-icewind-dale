@@ -2,6 +2,7 @@ import { createServer as createHttpServer, type IncomingMessage } from 'node:htt
 import { loadEnv, createServer as createViteServer } from 'vite'
 import markersHandler from '../api/markers'
 import missionsHandler from '../api/missions'
+import servicesHandler from '../api/services'
 
 const env = loadEnv('development', process.cwd(), '')
 Object.assign(process.env, env)
@@ -31,8 +32,17 @@ function webHeaders(request: IncomingMessage) {
 const server = createHttpServer(async (request, response) => {
   try {
     const url = new URL(request.url ?? '/', 'http://localhost')
-    if (url.pathname === '/api/markers' || url.pathname === '/api/missions') {
-      const handler = url.pathname === '/api/markers' ? markersHandler : missionsHandler
+    if (
+      url.pathname === '/api/markers' ||
+      url.pathname === '/api/missions' ||
+      url.pathname === '/api/services'
+    ) {
+      const handler =
+        url.pathname === '/api/markers'
+          ? markersHandler
+          : url.pathname === '/api/missions'
+            ? missionsHandler
+            : servicesHandler
       const apiResponse = await handler.fetch(
         new Request(url, {
           method: request.method,

@@ -12,6 +12,7 @@ O mapa usa a imagem estática original, Leaflet com `CRS.Simple` e coordenadas n
 - Zoom, arraste, controles visuais e gestos de toque.
 - Pontos circulares coloridos com o nome abaixo, sem pinos tradicionais, que crescem junto com o zoom.
 - Popup controlado pelo React com descrição, imagem ampliável e listas de NPCs e locais.
+- Tabela de lojas e serviços por assentamento, com cadastro manual e importação JSON pelo Mestre.
 - Quadro de avisos público para novas missões e aba de missões ativas, ambos editáveis somente pelo Mestre.
 - Filtros por categoria na visão pública.
 - Editor para criar, editar, arrastar, revelar, ocultar e excluir pontos.
@@ -88,6 +89,29 @@ npm run dev:web
 
 Nesse modo o mapa abre, mas a consulta e a gravação de pontos exibem erro de conexão, pois `/api/markers` não está sendo executado.
 
+## Lojas e serviços dos assentamentos
+
+No painel do Mestre, abra um ponto da categoria `Assentamento` e use **Gerenciar tabela de lojas e serviços**. Os registros podem ser cadastrados manualmente ou importados em lote com este formato:
+
+```json
+{
+  "version": 1,
+  "establishments": [
+    {
+      "settlement": "Bryn Shander",
+      "name": "The Northlook",
+      "type": "Taverna e hospedaria",
+      "proprietor": "Scramsax",
+      "services": ["Hospedagem", "Refeições", "Rumores"],
+      "description": "",
+      "is_visible": true
+    }
+  ]
+}
+```
+
+O nome em `settlement` deve ser igual ao nome do ponto no mapa. Uma nova importação atualiza registros que já tenham o mesmo assentamento e nome.
+
 ## Imagem-base
 
 A imagem fornecida já está em:
@@ -153,7 +177,9 @@ Mesmo com essa limitação consciente:
 ## Estrutura principal
 
 ```text
-api/markers.ts                 função serverless da Vercel
+api/markers.ts                 função serverless dos pontos
+api/missions.ts                função serverless das missões
+api/services.ts                função serverless das lojas e serviços
 public/maps/icewind-dale.png   imagem-base
 server/                        validação e verificação do slug
 src/components/                mapa, popup, filtros e editor

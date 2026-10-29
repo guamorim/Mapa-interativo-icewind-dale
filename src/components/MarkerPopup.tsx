@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import type { MapMarker } from '../types'
+import { SettlementServicesPanel } from './SettlementServicesPanel'
 
 interface MarkerPopupProps {
   marker: MapMarker
@@ -10,12 +11,15 @@ interface MarkerPopupProps {
 export function MarkerPopup({ marker, onClose }: MarkerPopupProps) {
   const [imageFailed, setImageFailed] = useState(false)
   const [imageExpanded, setImageExpanded] = useState(false)
+  const [servicesOpen, setServicesOpen] = useState(false)
   const lightboxCloseButton = useRef<HTMLButtonElement>(null)
   const title = marker.name.trim() || 'Ponto sem identificação'
+  const isSettlement = marker.category.trim().toLocaleLowerCase('pt-BR') === 'assentamento'
 
   useEffect(() => {
     setImageFailed(false)
     setImageExpanded(false)
+    setServicesOpen(false)
   }, [marker.id, marker.image_url])
 
   useEffect(() => {
@@ -97,6 +101,19 @@ export function MarkerPopup({ marker, onClose }: MarkerPopupProps) {
               </ul>
             </section>
           ) : null}
+          {isSettlement ? (
+            <button
+              className="settlement-services-trigger"
+              type="button"
+              onClick={() => setServicesOpen(true)}
+            >
+              <span>
+                <strong>Lojas e serviços</strong>
+                <small>Consulte estabelecimentos, responsáveis e serviços disponíveis.</small>
+              </span>
+              <b aria-hidden="true">Ver tabela →</b>
+            </button>
+          ) : null}
         </div>
       </aside>
 
@@ -128,6 +145,14 @@ export function MarkerPopup({ marker, onClose }: MarkerPopupProps) {
             document.body,
           )
         : null}
+
+      {isSettlement ? (
+        <SettlementServicesPanel
+          open={servicesOpen}
+          marker={marker}
+          onClose={() => setServicesOpen(false)}
+        />
+      ) : null}
     </>
   )
 }

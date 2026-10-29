@@ -11,6 +11,7 @@ interface MarkerFormProps {
   onSave: (marker: MarkerInput) => Promise<void>
   onCancel: () => void
   onDelete?: () => Promise<void>
+  onManageServices?: () => void
 }
 
 const EMPTY_MARKER: MarkerInput = {
@@ -33,6 +34,7 @@ export function MarkerForm({
   onSave,
   onCancel,
   onDelete,
+  onManageServices,
 }: MarkerFormProps) {
   const [form, setForm] = useState<MarkerInput>({ ...EMPTY_MARKER, ...marker })
 
@@ -135,6 +137,16 @@ export function MarkerForm({
           onChange={(event) => setForm({ ...form, locations: event.target.value.split('\n') })}
         />
       </label>
+
+      {onManageServices ? (
+        <button
+          className="button button--ghost settlement-services-manage"
+          type="button"
+          onClick={onManageServices}
+        >
+          Gerenciar tabela de lojas e serviços
+        </button>
+      ) : null}
 
       <label>
         URL da imagem <span className="optional">opcional</span>

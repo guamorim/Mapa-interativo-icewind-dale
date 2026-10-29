@@ -44,10 +44,29 @@ alter table public.missions
 alter table public.missions
   alter column status set default 'notice';
 
+create table if not exists public.settlement_services (
+  id uuid primary key default gen_random_uuid(),
+  marker_id uuid not null references public.markers(id) on delete cascade,
+  name text not null check (char_length(name) between 1 and 120),
+  type text not null check (char_length(type) between 1 and 80),
+  proprietor text not null default '' check (char_length(proprietor) <= 120),
+  services text[] not null default '{}'::text[],
+  description text not null default '' check (char_length(description) <= 3000),
+  is_visible boolean not null default true,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 create index if not exists markers_visible_idx on public.markers (is_visible);
 create index if not exists markers_category_idx on public.markers (category);
 create index if not exists missions_active_idx on public.missions (is_active);
 create index if not exists missions_status_idx on public.missions (status);
+create index if not exists settlement_services_marker_idx
+  on public.settlement_services (marker_id);
+create index if not exists settlement_services_visible_idx
+  on public.settlement_services (marker_id, is_visible);
+create unique index if not exists settlement_services_marker_name_unique
+  on public.settlement_services (marker_id, name);
 
 create or replace function public.set_markers_updated_at()
 returns trigger
@@ -70,10 +89,16 @@ create trigger missions_set_updated_at
 before update on public.missions
 for each row execute function public.set_markers_updated_at();
 
+drop trigger if exists settlement_services_set_updated_at on public.settlement_services;
+create trigger settlement_services_set_updated_at
+before update on public.settlement_services
+for each row execute function public.set_markers_updated_at();
+
 -- O navegador nunca acessa esta tabela diretamente. A service role usada pelas
 -- funções serverless ignora RLS; as chaves públicas não recebem política alguma.
 alter table public.markers enable row level security;
 alter table public.missions enable row level security;
+alter table public.settlement_services enable row level security;
 
 -- Coordenadas normalizadas a partir da imagem original de 1219 × 838 px.
 -- Pontos sem nome permanecem ocultos e sem conteúdo narrativo inventado.
