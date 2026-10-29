@@ -29,6 +29,22 @@ describe('validação de lojas e serviços', () => {
     })
   })
 
+  it('aceita estabelecimentos com mais de 30 serviços', () => {
+    const services = Array.from({ length: 80 }, (_, index) => `Serviço ${index + 1}`)
+
+    expect(
+      parseSettlementServiceInput({ ...validService, services }).services,
+    ).toHaveLength(80)
+  })
+
+  it('rejeita mais de 200 serviços no mesmo estabelecimento', () => {
+    const services = Array.from({ length: 201 }, (_, index) => `Serviço ${index + 1}`)
+
+    expect(() => parseSettlementServiceInput({ ...validService, services })).toThrow(
+      'A lista pode conter no máximo 200 serviços.',
+    )
+  })
+
   it('rejeita ponto com ID inválido', () => {
     expect(() =>
       parseSettlementServiceInput({ ...validService, marker_id: 'bryn-shander' }),

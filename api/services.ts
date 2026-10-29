@@ -9,6 +9,8 @@ import type {
 // seguem o mesmo formato, evitando imports de runtime fora de /api na Vercel.
 export class ServiceValidationError extends Error {}
 
+const MAX_SERVICES_PER_ESTABLISHMENT = 200
+
 function text(value: unknown, field: string, maxLength: number, allowEmpty = true) {
   if (typeof value !== 'string') {
     throw new ServiceValidationError(`Campo inválido: ${field}.`)
@@ -24,8 +26,10 @@ function text(value: unknown, field: string, maxLength: number, allowEmpty = tru
 }
 
 function serviceList(value: unknown) {
-  if (!Array.isArray(value) || value.length > 30) {
-    throw new ServiceValidationError('A lista pode conter no máximo 30 serviços.')
+  if (!Array.isArray(value) || value.length > MAX_SERVICES_PER_ESTABLISHMENT) {
+    throw new ServiceValidationError(
+      `A lista pode conter no máximo ${MAX_SERVICES_PER_ESTABLISHMENT} serviços.`,
+    )
   }
 
   return Array.from(
