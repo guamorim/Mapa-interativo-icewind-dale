@@ -1015,6 +1015,12 @@ h2 {
   min-width: 13rem;
 }
 
+.services-table th:nth-child(4),
+.services-table td:nth-child(4) {
+  width: 43%;
+  min-width: 21rem;
+}
+
 .services-table td strong,
 .services-table td small,
 .services-table td em {
@@ -1039,6 +1045,124 @@ h2 {
   margin-top: 0.35rem;
   color: #e0a59e;
   font-size: 0.65rem;
+}
+
+.services-table__none {
+  color: var(--muted);
+  font-style: italic;
+}
+
+.service-catalog {
+  min-width: 0;
+  border: 1px solid rgba(195, 222, 228, 0.17);
+  border-radius: 0.55rem;
+  background: rgba(3, 10, 14, 0.28);
+}
+
+.service-catalog summary {
+  display: flex;
+  min-height: 2.35rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.52rem 0.65rem;
+  color: #d9e4e7;
+  cursor: pointer;
+  list-style: none;
+}
+
+.service-catalog summary::-webkit-details-marker {
+  display: none;
+}
+
+.service-catalog summary::after {
+  color: var(--gold);
+  content: "⌄";
+  font-size: 1rem;
+  line-height: 1;
+  transition: transform 160ms ease;
+}
+
+.service-catalog[open] summary::after {
+  transform: rotate(180deg);
+}
+
+.service-catalog summary:hover {
+  background: rgba(214, 179, 106, 0.07);
+}
+
+.service-catalog summary span {
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.service-catalog summary b {
+  margin-left: auto;
+  color: var(--ice);
+  font-size: 0.65rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.service-catalog summary b::before {
+  content: "Ver lista";
+}
+
+.service-catalog[open] summary b::before {
+  content: "Ocultar";
+}
+
+.service-catalog[open] summary {
+  border-bottom: 1px solid var(--line);
+}
+
+.service-catalog ul {
+  max-height: 20rem;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+  scrollbar-color: rgba(214, 179, 106, 0.45) transparent;
+  scrollbar-width: thin;
+}
+
+.service-catalog li {
+  display: grid;
+  grid-template-columns: 0.45rem minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 0.75rem;
+  padding: 0.55rem 0.65rem;
+  border-bottom: 1px solid rgba(195, 222, 228, 0.1);
+  color: #d5e0e3;
+  line-height: 1.4;
+}
+
+.service-catalog li:last-child {
+  border-bottom: 0;
+}
+
+.service-catalog li:nth-child(even) {
+  background: rgba(255, 255, 255, 0.018);
+}
+
+.service-catalog li::before {
+  color: var(--gold);
+  content: "◆";
+  font-size: 0.42rem;
+  transform: translateY(0.34rem);
+}
+
+.service-catalog li strong {
+  align-self: start;
+  padding: 0.12rem 0.38rem;
+  border: 1px solid rgba(214, 179, 106, 0.22);
+  border-radius: 999px;
+  color: #f0d59c;
+  background: rgba(214, 179, 106, 0.07);
+  font-family: inherit;
+  font-size: 0.66rem;
+  font-weight: 750;
+  white-space: nowrap;
 }
 
 .services-table__actions {
@@ -1742,6 +1866,11 @@ h2 {
     gap: 0.6rem;
   }
 
+  .services-table td:nth-child(4) {
+    width: 100%;
+    min-width: 0;
+  }
+
   .services-table td::before {
     color: #ead7a8;
     content: attr(data-label);
@@ -1752,6 +1881,16 @@ h2 {
   }
 
   .services-table__actions {
+    white-space: normal;
+  }
+
+  .service-catalog li {
+    grid-template-columns: 0.45rem minmax(0, 1fr);
+  }
+
+  .service-catalog li strong {
+    grid-column: 2;
+    justify-self: start;
     white-space: normal;
   }
 }

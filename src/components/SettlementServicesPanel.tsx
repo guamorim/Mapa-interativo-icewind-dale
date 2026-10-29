@@ -41,6 +41,42 @@ function sortServices(services: SettlementService[]) {
   )
 }
 
+function splitService(service: string) {
+  const separator = service.lastIndexOf(' — ')
+  if (separator < 1) return { label: service, detail: null }
+
+  return {
+    label: service.slice(0, separator),
+    detail: service.slice(separator + 3),
+  }
+}
+
+function ServiceCatalog({ services }: { services: string[] }) {
+  if (services.length === 0) return <span className="services-table__none">Não informado</span>
+
+  return (
+    <details className="service-catalog">
+      <summary>
+        <span>
+          {services.length} {services.length === 1 ? 'serviço disponível' : 'serviços disponíveis'}
+        </span>
+        <b aria-hidden="true" />
+      </summary>
+      <ul>
+        {services.map((service, index) => {
+          const { label, detail } = splitService(service)
+          return (
+            <li key={`${service}-${index}`}>
+              <span>{label}</span>
+              {detail ? <strong>{detail}</strong> : null}
+            </li>
+          )
+        })}
+      </ul>
+    </details>
+  )
+}
+
 export function SettlementServicesPanel({
   open,
   marker,
@@ -418,7 +454,7 @@ export function SettlementServicesPanel({
                         <td data-label="Tipo">{service.type}</td>
                         <td data-label="Responsável">{service.proprietor || '—'}</td>
                         <td data-label="Serviços">
-                          {service.services.length > 0 ? service.services.join(', ') : '—'}
+                          <ServiceCatalog services={service.services} />
                         </td>
                         {editable ? (
                           <td className="services-table__actions" data-label="Ações">
